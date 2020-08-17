@@ -6,11 +6,11 @@ Actor model은 분산 처리를 위한 계산 모델이다. 처리하는 unit을
 2. 새로운 actors를 유한으로 생성한다.
 3. 다음 메시지에 대한 행동을 지정한다.
 
-하나의 actor는 상태(state), 행동(behavior), 하나의 메일박스, 자식 actors 그리고 관리자 전략이 포함된 하나의 컨테이너이다. 이 모든 것들은 **Actor Reference**로 감춰져 있다. 한 가지 주목할 만한 것은 actors는 명확한 생명주기를 가지고 더이상 참조되지 않을 때 자동으로 없어지지 않는다는 것이다 : actor 하나를 생성하게 되면, actor가 결국에는 잘 종료될 때까지 책임을 가지고 있어야 한다.
+하나의 actor는 상태(state), 행동(behavior), 하나의 메일박스, 자식 actors 그리고 관리자 전략이 포함된 하나의 컨테이너이다. 이 모든 것들은 **Actor Reference**로 감춰져 있다. 한 가지 주목할 만한 것은 actors는 명확한 생명주기를 가지고 더이상 참조되지 않을 때 자동으로 없어지지 않는다는 것이다 : actor 하나를 생성하고 난 이후 종료 시 자원이 어떻게 해제되는지에 대한 제어를 하고 확실히 종료되도록 하는 것 모두 당신의 책임이다.
 
 ## Actor Reference
 
-위에서 actor를 캡슐화 하는 존재가 Actor Reference라고 하였는데, actor model에서 이점을 얻기 위해서 캡슐화  하는 것이다. Actor reference는 제한 없이 자유롭게 오고 갈 수 있는 객체이다. 이렇게 내부 객체(actor)와 외부 객체(actor reference)를 나누었기에 원하는 작업들(어딘가 존재하는 references를 업데이트 할 필요없이 actor를 재시작 하기, 원격 host에 실제 actor 객체 두기, actors가 실행 중인 위치에 상관없이 actors에게 메시지 보내기)을  명백하게 할 수 있다.  하지만 actor가 그 자체로 정보를 잘못 갖고 있다면 actor의 내부를 보거나 외부에서 actor의 상태를 갖고 있을 수 없다는 것이 가장 중요한 이면이다.
+위에서 actor를 캡슐화 하는 존재가 Actor Reference라고 하였는데, actor model에서 이점을 얻기 위해서 캡슐화  하는 것이다. Actor reference는 제한 없이 자유롭게 오고 갈 수 있는 객체이다. 이렇게 내부 객체(actor)와 외부 객체(actor reference)를 나누었기에 원하는 작업들(어딘가 존재하는 references를 업데이트 할 필요없이 actor를 재시작 하기, 원격 host에 실제 actor 객체 두기, actors가 실행 중인 위치에 상관없이 actors에게 메시지 보내기)을  명백하게 할 수 있다.  하지만 actor가 그 자체로 정보를 잘못 갖고 있다면 actor의 내부를 보거나 외부에서 actor의 상태를 살펴볼 수 없다는 것이 가장 중요한 이면이다.
 
 ## State
 
