@@ -1,0 +1,55 @@
+# Actor란 무엇인가?
+
+Actor model은 분산 처리를 위한 계산 모델이다. 처리하는 unit을 actor라 하며 오직 메시지로만 소통을 한다. 메시지를 수신하면서 actor는 다음과 같은 3가지 행동을 할 수 있다. 
+
+1. 자신이 알고 있는 actors에게 유한한 메시지를 보낸다.
+2. 새로운 actors를 유한으로 생성한다.
+3. 다음 메시지에 대한 행동을 지정한다.
+
+하나의 actor는 상태(state), 행동(behavior), 하나의 메일박스, 자식 actors 그리고 관리자 전략이 포함된 하나의 컨테이너이다. 이 모든 것들은 **Actor Reference**로 감춰져 있다. 한 가지 주목할 만한 것은 actors는 명확한 생명주기를 가지고 더이상 참조되지 않을 때 자동으로 없어지지 않는다는 것이다 : actor 하나를 생성하게 되면, actor가 결국에는 잘 종료될 때까지 책임을 가지고 있어야 한다.
+
+## Actor Reference
+
+위에서 actor를 캡슐화 하는 존재가 Actor Reference라고 하였는데, actor model에서 이점을 얻기 위해서 캡슐화  하는 것이다. Actor reference는 제한 없이 자유롭게 오고 갈 수 있는 객체이다. 이렇게 내부 객체(actor)와 외부 객체(actor reference)를 나누었기에 원하는 작업들(어딘가 존재하는 references를 업데이트 할 필요없이 actor를 재시작 하기, 원격 host에 실제 actor 객체 두기, actors가 실행 중인 위치에 상관없이 actors에게 메시지 보내기)을  명백하게 할 수 있다.  하지만 actor가 그 자체로 정보를 잘못 갖고 있다면 actor의 내부를 보거나 외부에서 actor의 상태를 갖고 있을 수 없다는 것이 가장 중요한 이면이다.
+
+## State
+
+ Actor 객체는 상태를 나타내는 변수들을 포함하는데 이 변수들은 카운터, listener의 집합, 임박한 요청들 등이 될 수 있다. 그리고 다른 actors에 의해 손상 되어서는 안된다. Actors는 각각 그들만의 경량 스레드를 가지고 있어 완벽히 이를 막을 수 있다. 락을 사용해 접근하여 동기화할 필요 없이 동시성에 대해 걱정하지 않고 actor code를 사용할 수 있다.  Akka는 actor의 상태를 다루는 싱글 스레드에게 영향을 주지 않도록 설계되어 있다.
+
+내부 상태는 actor의 운용에 필수이기 때문에 일관적이지 않은 상태는 치명적이다. 그러므로 actor가 실패하고 관리자에 의해 재시작될 때, 상태는 actor가 처음 생성됐을 때처럼 손상 없이 생성될 것이다.
+
+옵션으로 재시작전에 수신된 메시지를 다시 받거나 재시작 후에 재개함으로써 자동으로 이 상태를 회복할 수 있다.
+
+### Behavior
+
+메시지가 매번 처리될 때마다 actor의 현재 행동과 비교된다. Behavior는 그 시점에서 메시지에 대응하여 해야 할 행동을 정의하는 기능을 말하며, client가 권한을 부여 받으면 요청을 전달하고 그렇지 않으면 거절한다. 이러한 행동은 시간이 지남에 따라 변할 수 있다. 서로 다른 client가 시간이 지남에 따라 권한을 갖게 되거나 actor가 서비스 중단 모드가 되었다가 이후에 다시 돌아 올 수 있기 때문이다. 이러한 변화는 behavior 로직에서 읽은 상태 변수에 인코딩하거나 다음 메시지에 사용될 다른 behavior를 리턴하여 런타임에 스왑될 수 있다. 그러나 actor 객체를 구성하는 동안 정의된 초기 behavior는 actor가 재시작하여 정의된 초기 behavior로 리셋된다는 점에서 특별하다.
+
+메시지는 actor reference로 보내질 수 있고 이런 배후에 메시지를 받고 그에 따라 행동을 하는 behavior가 있다. actor reference와 behavior 간 바인딩은 시간이 지남에 따라 바뀔 수 있지만 겉으로는 보이지 않는다.
+
+Actor reference는 매개변수화 되어 있고 오직 정해진 타입의 메시지만 actor reference에 전송될 수 있다. 각각의 behavior 또한 처리할 수 있는 메시지 타입으로 매개변수화 되어 있다. behavior가 actor reference에서 behavior는 바뀔 수 있으므로 다음 behavior를 지정하는 것은 제한적인 작업이다 : 후계자는 전임자와 동일한 메시지 타입을 처리해야 한다. 이것은 Actor를 참조하고 있는 actor reference의 유효성을 확인하기 위해 필요하다.
+
+actor reference와 behavior 간의 연계는 동적 런타임 속성이기에 컴파일러가 소스 코드를 분석하는 동안은 알지 못한다. (내부적으로 변수를 가진 자바 객체와 동일하다. 따라서 메서드 호출 결과는 모르지만 리턴 타입은 주어진 타입이라는 것을 알 수 있다.)
+
+### Mailbox
+
+actor의 목적은 메시지를 처리하는 것이며, 메시지들은 actor에서 다른 actors로(또는 actor system 외부로) 전송된다. 송신자와 수신자를 연결하는 개체가 바로 actor의 mailbox이다: 각 actor는 정확히 하나의 mailbox를 갖고있다. 이곳에 모든 송신자들이 그들의 메시지를 넣는다. 송신 작업의 시간 순으로 넣는 작업이 일어나고 다른 actors에서 보낸 메시지는 스레드들에 따라서 분산되는 임의의 actors 때문에 런타임 시 순서를 정의하고 있지 않는다. 즉 같은 actor로 부터 같은 목적지에 다양한 메시지를 보내는 것은 같은 순서로 쌓인다는 뜻이다. 
+
+기본 구현은 FIFO이지만 메시지에 우선순위를 부여해야 한다면, FIFO가 아닌 다른 큐 알고리즘를 정의하여 그 방식대로 메시지가 쌓이게 할 수 있다.
+
+### Child Actors
+
+각각의 actor는 잠재적으로 부모이다: 서브 테스크를 위임하기 위해 자식을 생성한다면 자동으로 그들을 관리할 것이다. 자식 목록은 actor의 context 내에 있어 이걸 통해 actor는 접근한다. 자식을 생성하거나 멈추면 이 리스트는 바뀌고 이것은 즉시 반영된다. 실제 이런 행동(생성/종료)들은 비동기 방식으로 이루어지기에 부모를 블락시키지 않는다.
+
+### Supervisor Strategy
+
+actor의 마지막 부분은 예상하지 못한 예외(실패)를 다루는 전략이다. 각각의 실패에 대한 Fault Tolerance(결점에 잘 버티는)에 묘사된 전략들 중 하나를 적용하여 Akka에 의해 이런 실패 처리가 명확하게 수행된다.
+
+### 하나의 Actor가 종료되었을 때
+
+actor가 종료되면 즉, 재시작으로 처리되지 않거나, 스스로 멈추거나, 감독자에 의해 정지되는 방식에서 실패하면 actor는 자원을 해제하여 시스템의 "dead letter mailbox"에 있는 mailbox로 남아있는 모든 메시지를 보내고 그것은 "DeadLetters"라는 이벤트로 "EventStream"에 전달한다.
+
+actor reference 내에서 mailbox는 시스템 mailbox로 대체되고 모든 메시지들이 DeadLetters로 EventStream에 리다이렉트한다. 이러한 작업은 최선의 노력으로 수행되기에 보장된 전달을 구축하기 위해 이 작업에 의존하지 않도록 한다.
+
+### Ref.
+
+[Actor Akka 문서]([https://doc.akka.io/docs/akka/current/general/actors.html](https://doc.akka.io/docs/akka/current/general/actors.html))
