@@ -52,4 +52,4 @@ actor reference 내에서 mailbox는 시스템 mailbox로 대체되고 모든 �
 
 ### Ref.
 
-[What is an Actor? - Akka 문서](https://doc.akka.io/docs/akka/current/general/actors.html](https://doc.akka.io/docs/akka/current/general/actors.html)
+[What is an Actor? - Akka 문서](https://doc.akka.io/docs/akka/current/general/actors.html)
